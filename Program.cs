@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using hotel_clone_api.Mappings;
+using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 DotNetEnv.Env.Load();
@@ -14,6 +16,10 @@ DotNetEnv.Env.Load();
 builder.Services.AddControllers().AddNewtonsoftJson();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+//REGISTERING HTTPCONTEXTACCESSOR FOR IMAGES ==========================================
+builder.Services.AddHttpContextAccessor();
+// ================================================================
 
 // DB CONTEXT  =================================´
 /*string connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
@@ -41,8 +47,12 @@ builder.Services.AddDbContext<HotelDbContext>(options =>
 //REGISTERING REPOSITORIES ==========================================
 /*builder.Services.AddScoped<IRoomRepository, SQLRoomRepository>();
 */builder.Services.AddScoped<ITokenRepository, TokenRepository>();
-/*builder.Services.AddScoped<IImageRepository, ImageRepository>();
-builder.Services.AddScoped<IOffersRepository, SQLOfferRepository>();*/
+builder.Services.AddScoped<IImageRepository, ImageRepository>();
+//builder.Services.AddScoped<IOffersRepository, SQLOfferRepository>();
+// ================================================================
+
+//REGISTERING MAPPING ==========================================
+builder.Services.AddAutoMapper(typeof(MainAutoMapper));
 // ================================================================
 
 // ============= REGISTEWRING IDENTITYUSER FOR LOGIN AND REGISTER ENDPOINTS =====================
@@ -93,6 +103,14 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 
 app.UseAuthorization();
+
+// Configuration to save IMAGES/STATIC FILES  =================================´
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "Images")),
+    RequestPath = "/Images"
+});
+// ====================================================================
 
 app.MapControllers();
 
