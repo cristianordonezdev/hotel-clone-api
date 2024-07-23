@@ -13,6 +13,16 @@ var builder = WebApplication.CreateBuilder(args);
 DotNetEnv.Env.Load();
 // Add services to the container.
 
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(builder =>
+    {
+        builder.WithOrigins("http://localhost:4200", "https://hotel-clone-api.azurewebsites.net")
+               .AllowAnyHeader()
+               .AllowAnyMethod();
+    });
+});
+
 builder.Services.AddControllers().AddNewtonsoftJson();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -22,16 +32,6 @@ builder.Services.AddHttpContextAccessor();
 // ================================================================
 
 // DB CONTEXT  =================================´
-/*string connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
-
-if (string.IsNullOrEmpty(connectionString))
-{
-    throw new InvalidOperationException("Connection string is not configured.," + connectionString);
-}
-else
-{
-    Console.WriteLine($"Connection string: {connectionString}");
-}*/
 
 builder.Services.AddDbContext<HotelDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("CONNECTION_STRING"), sqlServerOptionsAction: sqlOptions =>
@@ -103,6 +103,9 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 
 app.UseAuthorization();
+
+app.UseCors();
+
 
 // Configuration to save IMAGES/STATIC FILES  =================================´
 app.UseStaticFiles(new StaticFileOptions
