@@ -16,15 +16,19 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // DB CONTEXT  =================================´
-string connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
+/*string connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
 
 if (string.IsNullOrEmpty(connectionString))
 {
-    throw new InvalidOperationException("Connection string is not configured.");
+    throw new InvalidOperationException("Connection string is not configured.," + connectionString);
 }
+else
+{
+    Console.WriteLine($"Connection string: {connectionString}");
+}*/
 
 builder.Services.AddDbContext<HotelDbContext>(options =>
-    options.UseSqlServer(connectionString, sqlServerOptionsAction: sqlOptions =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("CONNECTION_STRING"), sqlServerOptionsAction: sqlOptions =>
     {
         sqlOptions.EnableRetryOnFailure(
             maxRetryCount: 5,
