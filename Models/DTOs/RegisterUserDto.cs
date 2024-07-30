@@ -6,6 +6,7 @@ namespace hotel_clone_api.Models.DTOs
     {
         [Required]
         [DataType(DataType.EmailAddress)]
+        [EmailAddress(ErrorMessage = "Invalid email address")]
         public string Username { get; set; }
 
         [Required]

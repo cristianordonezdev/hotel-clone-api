@@ -1,5 +1,7 @@
-﻿using hotel_clone_api.Models.DTOs;
+﻿using hotel_clone_api.Libs;
+using hotel_clone_api.Models.DTOs;
 using hotel_clone_api.Repositories;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -13,17 +15,25 @@ namespace HotelABC_API.Controllers
     {
         private readonly UserManager<IdentityUser> userManager;
         private readonly ITokenRepository tokenRepository;
+        private readonly Utils _utils;
 
-        public AuthController(UserManager<IdentityUser> userManager, ITokenRepository tokenRepository)
+        public AuthController(UserManager<IdentityUser> userManager, ITokenRepository tokenRepository, IWebHostEnvironment webHostEnvironment)
         {
             this.userManager = userManager;
             this.tokenRepository = tokenRepository;
+            this._utils = new Utils(webHostEnvironment);
         }
         // POST: /api/auth/register
         [HttpPost]
         [Route("Register")]
         public async Task<IActionResult> Register([FromBody] RegisterUserDto registerRequestDto)
         {
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(_utils.BuildErrorResponse(ModelState));
+            }
+
             var identityUser = new IdentityUser
             {
                 UserName = registerRequestDto.Username,
@@ -47,7 +57,10 @@ namespace HotelABC_API.Controllers
 
             }
 
-            return BadRequest("Something went wrong");
+            ModelState.AddModelError("Register", "Something when wrong");
+            var errorResponse = _utils.BuildErrorResponse(ModelState);
+
+            return BadRequest(errorResponse);
         }
 
         [HttpPost]
@@ -80,7 +93,10 @@ namespace HotelABC_API.Controllers
                 }
             }
 
-            return BadRequest("The password or user is incorrect");
+            ModelState.AddModelError("Login", "Invalid email or password");
+            var errorResponse = _utils.BuildErrorResponse(ModelState);
+
+            return BadRequest(errorResponse);
         }
     }
 }
