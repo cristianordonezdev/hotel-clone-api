@@ -1,5 +1,6 @@
 ﻿using hotel_clone_api.Models.DTOs;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace hotel_clone_api.Libs
@@ -41,6 +42,23 @@ namespace hotel_clone_api.Libs
                     modelState.AddModelError("File", "File size more than 10MB, please upload a smaller file");
                 }
             }
+        }
+
+        public ErrorResponse BuildErrorResponse(ModelStateDictionary modelState)
+        {
+            var errorResponse = new ErrorResponse
+            {
+                Status = 400,
+                Title = "One or more validation errors occurred.",
+                Detail = "Please refer to the errors property for additional details.",
+                Errors = modelState
+                    .Where(x => x.Value.Errors.Count > 0)
+                    .ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                    )
+            };
+            return errorResponse;
         }
     }
 }

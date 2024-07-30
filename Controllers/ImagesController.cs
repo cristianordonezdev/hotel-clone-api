@@ -1,10 +1,14 @@
 ﻿using AutoMapper;
+using hotel_clone_api.Libs;
 using hotel_clone_api.Models.Domain;
 using hotel_clone_api.Models.DTOs;
 using hotel_clone_api.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using System.Web.Http.ModelBinding;
+
 
 namespace hotel_clone_api.Controllers
 {
@@ -14,11 +18,16 @@ namespace hotel_clone_api.Controllers
     {
         private readonly IImageRepository imageRepository;
         private readonly IMapper mapper;
+        private readonly Utils utils;
+        private readonly ILogger<ImagesController> _logger;
 
-        public ImagesController(IImageRepository imageRepository, IMapper mapper)
+        public ImagesController(IImageRepository imageRepository, IMapper mapper, IWebHostEnvironment webHostEnvironment, ILogger<ImagesController> logger)
         {
             this.imageRepository = imageRepository;
             this.mapper = mapper;
+            this.utils = new Utils(webHostEnvironment);
+            this._logger = logger;
+
         }
 
         [HttpGet]
@@ -45,19 +54,32 @@ namespace hotel_clone_api.Controllers
         [Authorize(Roles = "Writer")]
         public async Task<IActionResult> UploadImage([FromForm] CreateImageDto createImageDto)
         {
-            List<Image> imagesUploaded = new List<Image> { };
-            foreach (var image in createImageDto.File)
+            utils.ValidateFileUpload(createImageDto.File, ModelState);
+            if (createImageDto.ImageTypeId == Guid.Empty)
             {
-                Image newImage = new Image
-                {
-                    File = image,
-                    ImageTypeId = createImageDto.ImageTypeId
-                };
-                var imageUploaded = await imageRepository.UploadImage(newImage);
-                imagesUploaded.Add(imageUploaded);
+                ModelState.AddModelError("ImageTypeId", "ImageTypeId is required.");
             }
-          
-            return Ok(mapper.Map<List<ImageDto>>(imagesUploaded));
+            if (ModelState.IsValid)
+            {
+                List<Image> imagesUploaded = new List<Image> { };
+                foreach (var image in createImageDto.File)
+                {
+                    Image newImage = new Image
+                    {
+                        File = image,
+                        ImageTypeId = createImageDto.ImageTypeId
+                    };
+
+
+                    var imageUploaded = await imageRepository.UploadImage(newImage);
+                    imagesUploaded.Add(newImage);
+                }
+
+                return Ok(mapper.Map<List<ImageDto>>(imagesUploaded));
+
+            }
+            var errorResponse = utils.BuildErrorResponse(ModelState);
+            return BadRequest(errorResponse);
         }
 
         [HttpGet]
