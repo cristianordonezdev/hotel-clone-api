@@ -86,11 +86,10 @@ namespace hotel_clone_api.Controllers
                     }
                     
                 }
-
                 return Ok(roomDto);
             }
-
-            return BadRequest();   
+            var errorResponse = utils.BuildErrorResponse(ModelState);
+            return BadRequest(errorResponse);   
         }
 
         [HttpPut]
