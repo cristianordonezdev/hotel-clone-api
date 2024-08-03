@@ -20,9 +20,9 @@ namespace hotel_clone_api.Controllers
         }
         [HttpGet]
         [Authorize(Roles = "Writer")]
-        public async Task<IActionResult> GetContacts()
+        public async Task<IActionResult> GetContacts([FromQuery] int pageNumber = 1, int pageSize = 10, string query = null)
         {
-            var contacts = await _contactRepository.GetAllContacts();
+            var contacts = await _contactRepository.GetAllContacts(pageNumber, pageSize, query);
             return Ok(_mapper.Map<List<ContactDto>>(contacts));
         }
 

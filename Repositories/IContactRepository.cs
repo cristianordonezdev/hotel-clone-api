@@ -6,7 +6,7 @@ namespace hotel_clone_api.Repositories
     {
         Task<Contact> CreateContact(Contact contact);
 
-        Task<List<Contact>> GetAllContacts();
+        Task<List<Contact>> GetAllContacts(int pageNumber, int pageSize, string? query);
 
         Task<Contact?> GetContactById(Guid Id);
     }

@@ -20,10 +20,17 @@ namespace hotel_clone_api.Repositories
             return contact;
         }
 
-        public async Task<List<Contact>> GetAllContacts()
+        public async Task<List<Contact>> GetAllContacts(int pageNumber = 1, int pageSize = 10, string query = null)
         {
-            var contacts = await _context.Contacts.ToListAsync();
-            return contacts;
+            var contacts = _context.Contacts.OrderByDescending(i => i.CreatedAt).AsQueryable();
+
+            if (!string.IsNullOrEmpty(query))
+            {
+                contacts = contacts.Where(i => i.Name.Contains(query) || i.Email.Contains(query) || i.Subject.Contains(query) || i.Message.Contains(query));
+            }
+
+            int skipResult = (pageNumber - 1) * pageSize;
+            return await contacts.Skip(skipResult).Take(pageSize).ToListAsync();
         }
 
         public async Task<Contact?> GetContactById(Guid Id)
