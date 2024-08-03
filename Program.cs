@@ -49,6 +49,7 @@ builder.Services.AddScoped<IRoomRepository, SQLRoomRepository>();
 builder.Services.AddScoped<ITokenRepository, TokenRepository>();
 builder.Services.AddScoped<IImageRepository, ImageRepository>();
 builder.Services.AddScoped<IOffersRepository, SQLOfferRepository>();
+builder.Services.AddScoped<IContactRepository, SQLContactRepository>();
 // ================================================================
 
 //REGISTERING MAPPING ==========================================
