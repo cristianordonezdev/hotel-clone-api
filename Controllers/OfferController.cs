@@ -60,7 +60,8 @@ namespace hotel_clone_api.Controllers
 
                 return Ok(offerDto);
             }
-            return BadRequest();
+            var errorResponse = utils.BuildErrorResponse(ModelState);
+            return BadRequest(errorResponse);
         }
 
         [HttpPut]
@@ -88,7 +89,8 @@ namespace hotel_clone_api.Controllers
                 offerDto.imagePath = imageUploaaded.FilePath;
                 return Ok(offerDto);
             }
-            return BadRequest();
+            var errorResponse = utils.BuildErrorResponse(ModelState);
+            return BadRequest(errorResponse);
         }
 
         [HttpDelete]

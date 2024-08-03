@@ -133,7 +133,9 @@ namespace hotel_clone_api.Controllers
 
 
             }
-            return BadRequest();
+            var errorResponse = utils.BuildErrorResponse(ModelState);
+
+            return BadRequest(errorResponse);
         }
 
         [HttpPatch]

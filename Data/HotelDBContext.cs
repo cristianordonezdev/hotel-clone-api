@@ -2,16 +2,14 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using static System.Net.Mime.MediaTypeNames;
-using System.Collections.Generic;
-using System.Reflection.Emit;
 using System;
+using System.Collections.Generic;
 
 namespace hotel_clone_api.Data
 {
     public class HotelDbContext : IdentityDbContext<IdentityUser>
     {
-        public HotelDbContext(DbContextOptions dbContextOptions) : base(dbContextOptions)
+        public HotelDbContext(DbContextOptions<HotelDbContext> options) : base(options)
         {
         }
 
@@ -19,10 +17,17 @@ namespace hotel_clone_api.Data
         public DbSet<ImageType> ImageTypes { get; set; }
         public DbSet<hotel_clone_api.Models.Domain.Image> Images { get; set; }
         public DbSet<Offer> Offers { get; set; }
+        public DbSet<Contact> Contacts { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            // Configurar el tipo de columna para Price
+            modelBuilder.Entity<Room>(entity =>
+            {
+                entity.Property(e => e.Price).HasColumnType("decimal(18,2)");
+            });
 
             var readerRoleId = "f0571c7a-9d14-48c2-ad57-d08430d9e358";
             var writerRoleId = "8e209f7d-2358-44f1-8623-86684bf3081b";
@@ -47,9 +52,8 @@ namespace hotel_clone_api.Data
 
             modelBuilder.Entity<IdentityRole>().HasData(roles);
 
-            //Seeding data for ImageTypes
-
-            var ImagesTypes = new List<ImageType>()
+            // Seed data for ImageTypes
+            var imageTypes = new List<ImageType>()
             {
                 new ImageType()
                 {
@@ -73,45 +77,7 @@ namespace hotel_clone_api.Data
                 },
             };
 
-            modelBuilder.Entity<ImageType>().HasData(ImagesTypes);
-
-            //List<RoomReservation> roomsAvaible = new List<RoomReservation>();
-            //for (int i = 0; i < 3; i++)
-            //{
-            //    roomsAvaible.Add(new RoomReservation()
-            //    {
-            //        Id = Guid.NewGuid(),
-            //        roomId = Guid.Parse("5ec91cd3-2842-4a51-c394-08db81affe60"),
-            //    });
-            //    roomsAvaible.Add(new RoomReservation()
-            //    {
-            //        Id = Guid.NewGuid(),
-            //        roomId = Guid.Parse("72727aa7-ddc3-4844-8e79-08db827c2d2c"),
-            //    });
-            //    roomsAvaible.Add(new RoomReservation()
-            //    {
-            //        Id = Guid.NewGuid(),
-            //        roomId = Guid.Parse("eb2fa93b-c9c5-4755-8e7a-08db827c2d2c"),
-            //    });
-            //}
-
-            //modelBuilder.Entity<RoomReservation>().HasData(roomsAvaible);
-
-
-
-
-            //Making relation between images en rooms
-            //modelBuilder.Entity<Image>()
-            //   .HasOne(image => image.Room)
-            //   .WithMany(room => room.Images)
-            //   .HasForeignKey(image => image.RelativeRelationId)
-            //   .OnDelete(DeleteBehavior.Cascade);
-
-            //modelBuilder.Entity<Image>()
-            //   .HasOne(image => image.Offer)
-            //   .WithOne(offer => offer.Image)
-            //   .HasForeignKey<Offer>(offer => offer.ImageId)
-            //   .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<ImageType>().HasData(imageTypes);
         }
     }
 }
