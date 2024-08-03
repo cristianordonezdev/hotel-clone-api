@@ -15,8 +15,8 @@ namespace hotel_clone_api.Controllers
         private readonly IMapper _mapper;
         public ContactController(IContactRepository contactRepository, IMapper mapper)
         {
-            this._contactRepository = contactRepository;
-            this._mapper = mapper;
+            _contactRepository = contactRepository;
+            _mapper = mapper;
         }
         [HttpGet]
         [Authorize(Roles = "Writer")]
@@ -43,10 +43,16 @@ namespace hotel_clone_api.Controllers
         [Authorize(Roles = "Writer")]
         public async Task<IActionResult> PostContact([FromBody] ContactAddDto contactAdd)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             var contactDomain = _mapper.Map<Contact>(contactAdd);
             await _contactRepository.CreateContact(contactDomain);
 
-            return CreatedAtAction(nameof(GetContact), new { id = contactDomain.Id }, contactDomain);
+            var contactDto = _mapper.Map<ContactDto>(contactDomain);
+            return CreatedAtAction(nameof(GetContact), new { id = contactDomain.Id }, contactDto);
         }
     }
 }
