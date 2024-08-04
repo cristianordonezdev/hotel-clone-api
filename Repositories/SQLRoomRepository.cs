@@ -104,7 +104,7 @@ namespace hotel_clone_api.Repositories
             return room;
         }
 
-        public async Task<Room?> UpdateRoom(Guid Id, Room room)
+        public async Task<Room?> UpdateRoom(Guid Id, Room room, List<IFormFile> files)
         {
             var roomDomain = await _hotelDbContext.Rooms.FirstOrDefaultAsync(item => item.Id == Id);
             var imagesDomain = await _hotelDbContext.Images
@@ -119,6 +119,26 @@ namespace hotel_clone_api.Repositories
             roomDomain.Description = room.Description;
             roomDomain.Characteristics = room.Characteristics;
             roomDomain.Price = room.Price;
+
+            foreach (var file in files)
+            {
+                var imageDomain = new Image
+                {
+                    File = file,
+                    RelativeRelationId = roomDomain.Id,
+                    ImageTypeId = Guid.Parse("3897b275-7a3f-4a84-a620-105b9b0eb89a"),
+                };
+                var imageUploadedDomain = await _imageRepository.UploadImage(imageDomain);
+                if (roomDomain.Images == null)
+                {
+                    roomDomain.Images = new List<Image> { imageUploadedDomain };
+                }
+                else
+                {
+                    roomDomain.Images.Add(imageUploadedDomain);
+                }
+
+            }
 
             foreach (var image in imagesDomain)
             {

@@ -78,37 +78,15 @@ namespace hotel_clone_api.Controllers
 
             if (ModelState.IsValid)
             {
-                var roomDomain = await _roomRepository.UpdateRoom(Id, _mapper.Map<Room>(updateRoomDto));
+                var roomDomain = await _roomRepository.UpdateRoom(Id, _mapper.Map<Room>(updateRoomDto), updateRoomDto.File);
                 if (roomDomain == null)
                 {
                     return NotFound();
                 }
 
-                var roomDto = _mapper.Map<RoomDetailDto>(roomDomain);
+                var roomDto = _mapper.Map<RoomDto>(roomDomain);
 
-                foreach (var file in updateRoomDto.File)
-                {
-                    var imageDomain = new Image
-                    {
-                        File = file,
-                        RelativeRelationId = roomDomain.Id,
-                        ImageTypeId = Guid.Parse("3897b275-7a3f-4a84-a620-105b9b0eb89a"),
-                    };
-                    var imageUploadedDomain = await _imageRepository.UploadImage(imageDomain);
-                    if (roomDto.Images == null)
-                    {
-                        roomDto.Images = new List<ImageDto> { _mapper.Map<ImageDto>(imageUploadedDomain) };
-
-                    }
-                    else
-                    {
-                        roomDto.Images.Add(_mapper.Map<ImageDto>(imageUploadedDomain));
-                    }
-
-                }
                 return Ok(roomDto);
-
-
             }
             var errorResponse = _utils.BuildErrorResponse(ModelState);
 
