@@ -9,8 +9,10 @@ namespace hotel_clone_api.Mappings
         public MainAutoMapper()
         {
             // origin - destination
-            CreateMap<Room, RoomDto>().ReverseMap();
-            CreateMap<CreateRoomDto, Room>().ReverseMap();
+            CreateMap<Room, RoomDto>()
+            .ForMember(dest => dest.Images, opt => opt.MapFrom(src => src.Images.Select(i => i.FilePath).ToList()));
+/*            CreateMap<Room, RoomDto>().ReverseMap();
+*/            CreateMap<CreateRoomDto, Room>().ReverseMap();
             CreateMap<Room, RoomDetailDto>().ReverseMap();
             CreateMap<RoomDetailDto, Room>().ReverseMap();
             CreateMap<Room, CreateRoomDto>().ReverseMap();

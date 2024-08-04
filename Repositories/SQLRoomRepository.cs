@@ -3,6 +3,7 @@ using hotel_clone_api.Data;
 using hotel_clone_api.Libs;
 using hotel_clone_api.Models.Domain;
 using hotel_clone_api.Models.DTOs;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
 
@@ -10,90 +11,106 @@ namespace hotel_clone_api.Repositories
 {
     public class SQLRoomRepository : IRoomRepository
     {
-        private readonly HotelDbContext hotelDbContext;
-        private readonly IWebHostEnvironment webHostEnvironment;
-        private readonly IMapper mapper;
-        private readonly Utils utils;
+        private readonly HotelDbContext _hotelDbContext;
+        private readonly IImageRepository _imageRepository;
+        private readonly Utils _utils;
 
-        public SQLRoomRepository(HotelDbContext hotelDbContext, IWebHostEnvironment webHostEnvironment,
-            IMapper mapper)
+        public SQLRoomRepository(HotelDbContext hotelDbContext,
+            IMapper mappe, Utils utils, IImageRepository imageRepository)
         {
-            this.hotelDbContext = hotelDbContext;
-            this.webHostEnvironment = webHostEnvironment;
-            this.mapper = mapper;
-            this.utils = new Utils(webHostEnvironment);
+            _hotelDbContext = hotelDbContext;
+            _utils = utils;
+            _imageRepository = imageRepository;
         }
 
-        public async Task<Room> CreateRoom(Room room)
+        public async Task<Room> CreateRoom(Room room, List<IFormFile> files)
         {
-            await hotelDbContext.Rooms.AddAsync(room);
-            await hotelDbContext.SaveChangesAsync();
+            await _hotelDbContext.Rooms.AddAsync(room);
+            await _hotelDbContext.SaveChangesAsync();
+
+            foreach (var file in files)
+            {
+                var imageDomain = new Image
+                {
+                    File = file,
+                    RelativeRelationId = room.Id,
+                    ImageTypeId = Guid.Parse("3897b275-7a3f-4a84-a620-105b9b0eb89a"),
+                };
+                var imageUploadedDomain = await _imageRepository.UploadImage(imageDomain);
+                if (room.Images == null)
+                {
+                    room.Images = new List<Image> { imageUploadedDomain };
+                }
+                else
+                {
+                    room.Images.Add(imageUploadedDomain);
+                }
+            }
             return room;
         }
 
         public async Task<Room?> DeleteRoom(Guid Id)
         {
-            var roomDomain = await hotelDbContext.Rooms.FirstOrDefaultAsync(item => item.Id == Id);
+            var roomDomain = await _hotelDbContext.Rooms.FirstOrDefaultAsync(item => item.Id == Id);
             if (roomDomain == null)
             {
                 return null;
             }
-            var roomImagesDomain = await hotelDbContext.Images.Where(item => item.RelativeRelationId == roomDomain.Id).ToListAsync();
+           var roomImagesDomain = await _hotelDbContext.Images.Where(item => item.RelativeRelationId == roomDomain.Id).ToListAsync();
             foreach (var image in roomImagesDomain)
             {
-                utils.DeleteImageFromFolder(image.FilePath);
-                hotelDbContext.Images.Remove(image);
+                _utils.DeleteImageFromFolder(image.FilePath);
+                _hotelDbContext.Images.Remove(image);
             }
-            hotelDbContext.Rooms.Remove(roomDomain);
-            await hotelDbContext.SaveChangesAsync();
+            _hotelDbContext.Rooms.Remove(roomDomain);
+            await _hotelDbContext.SaveChangesAsync();
             return roomDomain;
         }
 
-        public async Task<List<RoomDto>> GetAllRooms()
+        public async Task<List<Room>> GetAllRooms()
         {
-            var rooms = await hotelDbContext.Rooms.ToListAsync();
-            var roomsDto = mapper.Map<List<RoomDto>>(rooms);
-            List<Guid> roomsIds = rooms.Select(room => room.Id).ToList();
-
-            var images = await hotelDbContext.Images
+            var roomsDomain = await _hotelDbContext.Rooms.ToListAsync();
+            List<Guid> roomsIds = roomsDomain.Select(room => room.Id).ToList();
+            
+      
+            var images = await _hotelDbContext.Images
                 .Where(i => roomsIds.Contains(i.RelativeRelationId))
                 .ToListAsync();
 
 
-            foreach (var room in roomsDto)
+            foreach (var room in roomsDomain)
             {
                 var imageFromRoom = images.Where(i => i.RelativeRelationId.Equals(room.Id)).ToList();
                 if (imageFromRoom.Count > 0)
                 {
-                    room.Image = imageFromRoom[0].FilePath;
+                    room.Images = imageFromRoom;
                 }
             }
-            return roomsDto;
+            return roomsDomain;
         }
 
-        public async Task<RoomDetailDto?> GetById(Guid Id)
+        public async Task<Room?> GetById(Guid Id)
         {
-            var room = await hotelDbContext.Rooms.FirstOrDefaultAsync(item => item.Id == Id);
+            var room = await _hotelDbContext.Rooms.FirstOrDefaultAsync(item => item.Id == Id);
             if (room == null)
             {
                 return null;
             }
-            var images = await hotelDbContext.Images
+            var images = await _hotelDbContext.Images
                 .Where(image => image.RelativeRelationId == room.Id)
                 .ToListAsync();
 
-            RoomDetailDto roomDto = mapper.Map<RoomDetailDto>(room);
-            roomDto.Images = mapper.Map<List<ImageDto>>(images);
-
-            return roomDto;
+            room.Images = images;
+            return room;
         }
 
         public async Task<Room?> UpdateRoom(Guid Id, Room room)
         {
-            var roomDomain = await hotelDbContext.Rooms.FirstOrDefaultAsync(item => item.Id == Id);
-            var imagesDomain = await hotelDbContext.Images
+            var roomDomain = await _hotelDbContext.Rooms.FirstOrDefaultAsync(item => item.Id == Id);
+            var imagesDomain = await _hotelDbContext.Images
                 .Where(images => images.RelativeRelationId == roomDomain.Id)
                 .ToListAsync();
+
             if (roomDomain == null)
             {
                 return null;
@@ -102,26 +119,16 @@ namespace hotel_clone_api.Repositories
             roomDomain.Description = room.Description;
             roomDomain.Characteristics = room.Characteristics;
             roomDomain.Price = room.Price;
+
             foreach (var image in imagesDomain)
             {
-                utils.DeleteImageFromFolder(image.FilePath);
-                hotelDbContext.Images.Remove(image);
+                _utils.DeleteImageFromFolder(image.FilePath);
+                _hotelDbContext.Images.Remove(image);
             }
             
-            await hotelDbContext.SaveChangesAsync();
+            await _hotelDbContext.SaveChangesAsync();
 
             return roomDomain;
-        }
-
-        public async Task<Room> PatchRoom(Room room, CreateRoomDto createRoomDto)
-        {
-            room.Name = createRoomDto.Name;
-            room.Description = createRoomDto.Description;
-            room.Characteristics = createRoomDto.Characteristics;
-            room.Price = createRoomDto.Price;
-
-            await hotelDbContext.SaveChangesAsync();
-            return room;
         }
 
     }

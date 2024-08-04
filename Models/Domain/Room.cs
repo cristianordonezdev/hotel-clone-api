@@ -1,4 +1,6 @@
-﻿namespace hotel_clone_api.Models.Domain
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace hotel_clone_api.Models.Domain
 {
     public class Room
     {
@@ -12,5 +14,7 @@
 
         public decimal Price { get; set; }
 
+        [NotMapped]
+        public List<Image> Images { get; set; }
     }
 }

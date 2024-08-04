@@ -11,5 +11,9 @@ namespace hotel_clone_api.Models.DTOs
         public string Characteristics { get; set; }
 
         public string? Image { get; set; }
+
+        public decimal Price { get; set; }
+
+        public List<string> Images { get; set; }
     }
 }

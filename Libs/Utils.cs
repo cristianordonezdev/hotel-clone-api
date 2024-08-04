@@ -1,24 +1,23 @@
 ﻿using hotel_clone_api.Models.DTOs;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace hotel_clone_api.Libs
 {
     public class Utils
     {
-        private readonly IWebHostEnvironment webHostEnvironment;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
         public Utils(IWebHostEnvironment webHostEnvironment)
         {
-            this.webHostEnvironment = webHostEnvironment;
+            _webHostEnvironment = webHostEnvironment;
         }
-        public void DeleteImageFromFolder(string image_name)
-        {
-            string[] segments = image_name.Split('/');
 
-            string folderPath = Path.Combine(webHostEnvironment.ContentRootPath, "Images");
-            string filePath = Path.Combine(folderPath, segments[segments.Length - 1]);
+        public void DeleteImageFromFolder(string imageName)
+        {
+            string[] segments = imageName.Split('/');
+            string folderPath = Path.Combine(_webHostEnvironment.ContentRootPath, "Images");
+            string filePath = Path.Combine(folderPath, segments[^1]);
 
             if (File.Exists(filePath))
             {
@@ -26,6 +25,7 @@ namespace hotel_clone_api.Libs
                 File.Delete(filePath);
             }
         }
+
         public void ValidateFileUpload(List<IFormFile> files, ModelStateDictionary modelState)
         {
             var allowedExtension = new string[] { ".jpg", ".jpeg", ".png" };

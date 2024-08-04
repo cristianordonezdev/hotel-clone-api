@@ -8,6 +8,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using hotel_clone_api.Mappings;
 using Microsoft.Extensions.FileProviders;
+using hotel_clone_api.Libs;
 
 var builder = WebApplication.CreateBuilder(args);
 DotNetEnv.Env.Load();
@@ -26,6 +27,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddControllers().AddNewtonsoftJson();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddSingleton<Utils>(); // Registro de Utils como Singleton
 
 //REGISTERING HTTPCONTEXTACCESSOR FOR IMAGES ==========================================
 builder.Services.AddHttpContextAccessor();

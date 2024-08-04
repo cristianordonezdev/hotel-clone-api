@@ -15,99 +15,76 @@ namespace hotel_clone_api.Controllers
     [ApiController]
     public class RoomController : ControllerBase
     {
-        private readonly IRoomRepository roomRepository;
-        private readonly IMapper mapper;
-        private readonly IImageRepository imageRepository;
-        private readonly ILogger<RoomController> logger;
-        private readonly Utils utils;
+        private readonly IRoomRepository _roomRepository;
+        private readonly IMapper _mapper;
+        private readonly IImageRepository _imageRepository;
+        private readonly ILogger<RoomController> _logger;
+        private readonly Utils _utils;
 
         public RoomController(IRoomRepository roomRepository, IMapper mapper, 
-            IImageRepository imageRepository, IWebHostEnvironment webHostEnvironment, ILogger<RoomController> logger)
+            IImageRepository imageRepository, Utils utils, ILogger<RoomController> logger)
         {
-            this.roomRepository = roomRepository;
-            this.mapper = mapper;
-            this.imageRepository = imageRepository;
-            this.logger = logger;
-            this.utils = new Utils(webHostEnvironment);
+            _roomRepository = roomRepository;
+            _mapper = mapper;
+            _imageRepository = imageRepository;
+            _logger = logger;
+            _utils = utils;
         }
 
 
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var roomsDtos = await roomRepository.GetAllRooms();
-
+            var roomDomains = await _roomRepository.GetAllRooms();
+            var roomsDtos = _mapper.Map<List<RoomDto>>(roomDomains);
             return Ok(roomsDtos);
         }
         [HttpGet]
         [Route("{Id:Guid}")]
         public async Task<IActionResult> GetOne([FromRoute] Guid Id)
         {
-            var room = await roomRepository.GetById(Id);
+            var room = await _roomRepository.GetById(Id);
             if (room == null)
             {
                 return NotFound();
             }
-            return Ok(room);
+            return Ok(_mapper.Map<RoomDto>(room));
         }
 
         [HttpPost]
         [Authorize(Roles = "Writer")]
         public async Task<IActionResult> CreateRoom([FromForm] CreateRoomDto createRoomDto)
         {
-            utils.ValidateFileUpload(createRoomDto.File, ModelState);
+            _utils.ValidateFileUpload(createRoomDto.File, ModelState);
 
             if (ModelState.IsValid)
             {
-                var roomDomain = mapper.Map<Room>(createRoomDto);
+                var roomDomain = _mapper.Map<Room>(createRoomDto);
+                var roomCreated = await _roomRepository.CreateRoom(roomDomain, createRoomDto.File);
+                var roomDto = _mapper.Map<RoomDto>(roomCreated);
 
-                var roomCreated = await roomRepository.CreateRoom(roomDomain);
-                var roomDto = mapper.Map<RoomDetailDto>(roomDomain);
-
-                foreach (var file in createRoomDto.File)
-                {
-                    var imageDomain = new Image
-                    {
-                        File = file,
-                        // Room Id
-                        RelativeRelationId = roomDomain.Id,
-                        //Image Type Id
-                        ImageTypeId = Guid.Parse("3897b275-7a3f-4a84-a620-105b9b0eb89a"),
-                    };
-                    var imageUploadedDomain = await imageRepository.UploadImage(imageDomain);
-                    if (roomDto.Images == null)
-                    {
-                        roomDto.Images = new List<ImageDto> {mapper.Map<ImageDto>(imageUploadedDomain) };
-
-                    }
-                    else
-                    {
-                        roomDto.Images.Add(mapper.Map<ImageDto>(imageUploadedDomain));
-                    }
-                    
-                }
                 return Ok(roomDto);
             }
-            var errorResponse = utils.BuildErrorResponse(ModelState);
+            var errorResponse = _utils.BuildErrorResponse(ModelState);
             return BadRequest(errorResponse);   
         }
 
-        [HttpPut]
+       [HttpPut]
         [Route("{Id:Guid}")]
         [Authorize(Roles = "Writer")]
         public async Task<IActionResult> UpdateRoom([FromRoute] Guid Id, [FromForm] CreateRoomDto updateRoomDto)
         {
-            utils.ValidateFileUpload(updateRoomDto.File, ModelState);
+            _utils.ValidateFileUpload(updateRoomDto.File, ModelState);
 
             if (ModelState.IsValid)
             {
-                var roomDomain = await roomRepository.UpdateRoom(Id, mapper.Map<Room>(updateRoomDto));
+                var roomDomain = await _roomRepository.UpdateRoom(Id, _mapper.Map<Room>(updateRoomDto));
                 if (roomDomain == null)
                 {
                     return NotFound();
                 }
 
-                var roomDto = mapper.Map<RoomDetailDto>(roomDomain);
+                var roomDto = _mapper.Map<RoomDetailDto>(roomDomain);
 
                 foreach (var file in updateRoomDto.File)
                 {
@@ -117,15 +94,15 @@ namespace hotel_clone_api.Controllers
                         RelativeRelationId = roomDomain.Id,
                         ImageTypeId = Guid.Parse("3897b275-7a3f-4a84-a620-105b9b0eb89a"),
                     };
-                    var imageUploadedDomain = await imageRepository.UploadImage(imageDomain);
+                    var imageUploadedDomain = await _imageRepository.UploadImage(imageDomain);
                     if (roomDto.Images == null)
                     {
-                        roomDto.Images = new List<ImageDto> { mapper.Map<ImageDto>(imageUploadedDomain) };
+                        roomDto.Images = new List<ImageDto> { _mapper.Map<ImageDto>(imageUploadedDomain) };
 
                     }
                     else
                     {
-                        roomDto.Images.Add(mapper.Map<ImageDto>(imageUploadedDomain));
+                        roomDto.Images.Add(_mapper.Map<ImageDto>(imageUploadedDomain));
                     }
 
                 }
@@ -133,30 +110,9 @@ namespace hotel_clone_api.Controllers
 
 
             }
-            var errorResponse = utils.BuildErrorResponse(ModelState);
+            var errorResponse = _utils.BuildErrorResponse(ModelState);
 
             return BadRequest(errorResponse);
-        }
-
-        [HttpPatch]
-        [Route("{Id:Guid}")]
-        [Authorize(Roles = "Writer")]
-        public async Task<IActionResult> PatchRoom([FromRoute] Guid Id, [FromBody] JsonPatchDocument<CreateRoomDto> patchDocument)
-        {
-            var roomDomain = await roomRepository.GetById(Id);
-            if (roomDomain == null)
-            {
-                return NotFound();
-            }
-            var roomDto = mapper.Map<CreateRoomDto>(roomDomain);
-            patchDocument.ApplyTo(roomDto, ModelState);
-
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-            //await roomRepository.PatchRoom(roomDomain, roomDto);
-            return Ok(roomDto);
         }
 
         [HttpDelete]
@@ -164,12 +120,12 @@ namespace hotel_clone_api.Controllers
         [Authorize(Roles = "Writer")]
         public async Task<IActionResult> DeleteRoom([FromRoute] Guid Id)
         {
-            var roomDomain = await roomRepository.DeleteRoom(Id);
+            var roomDomain = await _roomRepository.DeleteRoom(Id);
             if (roomDomain == null)
             {
                 return NotFound();
             }
-            return Ok(mapper.Map<RoomDetailDto>(roomDomain));
+            return Ok(_mapper.Map<RoomDto>(roomDomain));
         }
 
     }
