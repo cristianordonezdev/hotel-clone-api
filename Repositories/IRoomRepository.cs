@@ -1,5 +1,6 @@
 ﻿using hotel_clone_api.Models.Domain;
 using hotel_clone_api.Models.DTOs;
+using Microsoft.AspNetCore.JsonPatch;
 
 namespace hotel_clone_api.Repositories
 {
@@ -9,7 +10,7 @@ namespace hotel_clone_api.Repositories
         Task<Room> CreateRoom(Room room, List<IFormFile> files);
         Task<Room?> DeleteRoom(Guid Id);
 
-        Task<Room?> UpdateRoom(Guid Id, Room room, List<IFormFile> files);
+        Task<Room?> UpdateRoom(Guid Id, Room room);
         Task<Room?> GetById(Guid Id);
 
     }

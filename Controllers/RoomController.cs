@@ -69,28 +69,21 @@ namespace hotel_clone_api.Controllers
             return BadRequest(errorResponse);   
         }
 
-       [HttpPut]
+        [HttpPut]
         [Route("{Id:Guid}")]
         [Authorize(Roles = "Writer")]
-        public async Task<IActionResult> UpdateRoom([FromRoute] Guid Id, [FromForm] CreateRoomDto updateRoomDto)
+        public async Task<IActionResult> UpdateRoom([FromRoute] Guid Id, [FromForm] UpdateRoom updateRoomDto)
         {
-            _utils.ValidateFileUpload(updateRoomDto.File, ModelState);
 
-            if (ModelState.IsValid)
+
+            var roomDomain = await _roomRepository.UpdateRoom(Id, _mapper.Map<Room>(updateRoomDto));
+            if (roomDomain == null)
             {
-                var roomDomain = await _roomRepository.UpdateRoom(Id, _mapper.Map<Room>(updateRoomDto), updateRoomDto.File);
-                if (roomDomain == null)
-                {
-                    return NotFound();
-                }
-
-                var roomDto = _mapper.Map<RoomDto>(roomDomain);
-
-                return Ok(roomDto);
+                return NotFound();
             }
-            var errorResponse = _utils.BuildErrorResponse(ModelState);
 
-            return BadRequest(errorResponse);
+            var roomDto = _mapper.Map<RoomDto>(roomDomain);
+            return Ok(roomDto);
         }
 
         [HttpDelete]

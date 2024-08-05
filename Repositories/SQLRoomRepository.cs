@@ -4,8 +4,10 @@ using hotel_clone_api.Libs;
 using hotel_clone_api.Models.Domain;
 using hotel_clone_api.Models.DTOs;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
+using System.Xml.XPath;
 
 namespace hotel_clone_api.Repositories
 {
@@ -104,12 +106,9 @@ namespace hotel_clone_api.Repositories
             return room;
         }
 
-        public async Task<Room?> UpdateRoom(Guid Id, Room room, List<IFormFile> files)
+        public async Task<Room?> UpdateRoom(Guid Id, Room room)
         {
             var roomDomain = await _hotelDbContext.Rooms.FirstOrDefaultAsync(item => item.Id == Id);
-            var imagesDomain = await _hotelDbContext.Images
-                .Where(images => images.RelativeRelationId == roomDomain.Id)
-                .ToListAsync();
 
             if (roomDomain == null)
             {
@@ -120,32 +119,12 @@ namespace hotel_clone_api.Repositories
             roomDomain.Characteristics = room.Characteristics;
             roomDomain.Price = room.Price;
 
-            foreach (var file in files)
-            {
-                var imageDomain = new Image
-                {
-                    File = file,
-                    RelativeRelationId = roomDomain.Id,
-                    ImageTypeId = Guid.Parse("3897b275-7a3f-4a84-a620-105b9b0eb89a"),
-                };
-                var imageUploadedDomain = await _imageRepository.UploadImage(imageDomain);
-                if (roomDomain.Images == null)
-                {
-                    roomDomain.Images = new List<Image> { imageUploadedDomain };
-                }
-                else
-                {
-                    roomDomain.Images.Add(imageUploadedDomain);
-                }
+            var images = await _hotelDbContext.Images
+                .Where(image => image.RelativeRelationId == roomDomain.Id)
+                .ToListAsync();
 
-            }
+            roomDomain.Images = images;
 
-            foreach (var image in imagesDomain)
-            {
-                _utils.DeleteImageFromFolder(image.FilePath);
-                _hotelDbContext.Images.Remove(image);
-            }
-            
             await _hotelDbContext.SaveChangesAsync();
 
             return roomDomain;
