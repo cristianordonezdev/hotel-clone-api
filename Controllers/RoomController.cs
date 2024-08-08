@@ -48,7 +48,7 @@ namespace hotel_clone_api.Controllers
             {
                 return NotFound();
             }
-            return Ok(_mapper.Map<RoomDto>(room));
+            return Ok(_mapper.Map<RoomDetailDto>(room));
         }
 
         [HttpPost]
