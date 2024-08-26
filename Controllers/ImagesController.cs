@@ -67,7 +67,8 @@ namespace hotel_clone_api.Controllers
                     Image newImage = new Image
                     {
                         File = image,
-                        ImageTypeId = createImageDto.ImageTypeId
+                        ImageTypeId = createImageDto.ImageTypeId,
+                        RelativeRelationId = createImageDto.RelativeRelationId,
                     };
 
 

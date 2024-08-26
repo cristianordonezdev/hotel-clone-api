@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Runtime.InteropServices;
 
 namespace hotel_clone_api.Models.DTOs
 {
@@ -9,5 +10,8 @@ namespace hotel_clone_api.Models.DTOs
 
         [Required]
         public Guid ImageTypeId { get; set; }
+
+        public Guid RelativeRelationId { get; set; }
+
     }
 }
