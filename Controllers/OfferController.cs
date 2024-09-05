@@ -37,6 +37,20 @@ namespace hotel_clone_api.Controllers
             return Ok(offersDto);
         }
 
+        [HttpGet]
+        [Authorize(Roles = "Writer")]
+        [Route("{Id:Guid}")]
+
+        public async Task<IActionResult> GetOneOffer([FromRoute] Guid Id)
+        {
+            var offer = await offersRepository.GetOffer(Id);
+            if (offer == null)
+            {
+                return NotFound();
+            }
+            return Ok(offer);
+        }
+
         [HttpPost]
         [Authorize(Roles = "Writer")]
         public async Task<IActionResult> CreateOffer([FromForm] OfferCreateUpdateDto offerCreateUpdate)
