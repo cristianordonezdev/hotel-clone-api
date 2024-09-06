@@ -25,6 +25,9 @@ namespace hotel_clone_api.Mappings
 
             CreateMap<Offer, OfferDto>().ReverseMap();
             CreateMap<OfferCreateUpdateDto, Offer>().ReverseMap();
+            CreateMap<UpdateOfferDto, Offer>().ReverseMap();
+            CreateMap<Offer, OfferDto>().ReverseMap();
+
 
             CreateMap<ImageType, ImageTypeDto>().ReverseMap();
 

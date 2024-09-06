@@ -46,19 +46,17 @@ namespace hotel_clone_api.Repositories
             return offerDomain;
         }
 
-        public async Task<OfferDto?> GetOffer(Guid id)
+        public async Task<OfferFullDto?> GetOffer(Guid id)
         {
             var offerDto = await dbContext.Offers
                 .Where(offer => offer.Id == id)
-                .Select(offer => new OfferDto
+                .Select(offer => new OfferFullDto
                 {
                     Id = offer.Id,
                     Name = offer.Name,
                     Description = offer.Description,
-                    imagePath = dbContext.Images
-                        .Where(image => image.RelativeRelationId == offer.Id)
-                        .Select(image => image.FilePath)
-                        .FirstOrDefault()
+                    Image = dbContext.Images
+                        .Where(image => image.RelativeRelationId == offer.Id).FirstOrDefault()
                 })
                 .FirstOrDefaultAsync();
 
@@ -97,11 +95,8 @@ namespace hotel_clone_api.Repositories
 
             offerDomain.Name = offer.Name;
             offerDomain.Description = offer.Description;
-
-            foreach (var image in imagesDomain)
-            {
-                utils.DeleteImageFromFolder(image.FilePath);
-            }
+            offerDomain.Image = imagesDomain[0];
+        
             await dbContext.SaveChangesAsync();
 
             return offerDomain;
