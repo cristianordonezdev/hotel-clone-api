@@ -12,7 +12,7 @@ namespace hotel_clone_api.Repositories
         Task<Offer?> DeleteOffer(Guid Id);
 
         Task<List<OfferDto>> GetOffers();
-        Task<OfferDto?> GetOffer(Guid Id);
+        Task<OfferFullDto?> GetOffer(Guid Id);
 
     }
 }

@@ -81,30 +81,12 @@ namespace hotel_clone_api.Controllers
         [HttpPut]
         [Authorize(Roles = "Writer")]
         [Route("{Id:Guid}")]
-        public async Task<IActionResult> UpdateOffer([FromRoute] Guid Id, [FromForm] OfferCreateUpdateDto offerCreateUpdateDto)
+        public async Task<IActionResult> UpdateOffer([FromRoute] Guid Id, [FromForm] UpdateOfferDto updateOfferDto)
         {
-            utils.ValidateFileUpload(new List<IFormFile> { offerCreateUpdateDto.File }, ModelState);
-            if (ModelState.IsValid)
-            {
-                var offerDomain = await offersRepository.UpdateOffer(Id, mapper.Map<Offer>(offerCreateUpdateDto));
-                if (offerDomain == null)
-                {
-                    return NotFound();
-                }
+            var offerDomain = await offersRepository.UpdateOffer(Id, mapper.Map<Offer>(updateOfferDto));
+            if (offerDomain == null) { return NotFound(); }
 
-                Image newImage = new Image
-                {
-                    File = offerCreateUpdateDto.File,
-                    RelativeRelationId = offerDomain.Id,
-                    ImageTypeId = Guid.Parse("8929b4bf-5be3-4002-8ad6-b9f46f782f16"),
-                };
-                var imageUploaaded = await imageRepository.UploadImage(newImage);
-                OfferDto offerDto = mapper.Map<OfferDto>(offerDomain);
-                offerDto.imagePath = imageUploaaded.FilePath;
-                return Ok(offerDto);
-            }
-            var errorResponse = utils.BuildErrorResponse(ModelState);
-            return BadRequest(errorResponse);
+            return Ok(offerDomain);
         }
 
         [HttpDelete]
