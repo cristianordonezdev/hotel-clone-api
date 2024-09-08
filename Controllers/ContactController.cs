@@ -40,7 +40,6 @@ namespace hotel_clone_api.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Writer")]
         public async Task<IActionResult> PostContact([FromBody] ContactAddDto contactAdd)
         {
             if (!ModelState.IsValid)
