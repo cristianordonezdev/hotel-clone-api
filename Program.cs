@@ -18,7 +18,7 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(builder =>
     {
-        builder.WithOrigins("http://localhost:4200", "https://hotel-clone-api.azurewebsites.net")
+        builder.WithOrigins("http://localhost:4200", "https://hotel-clone-api.azurewebsites.net", "https://hotel-clone.cristianordonez.dev")
                .AllowAnyHeader()
                .AllowAnyMethod();
     });
@@ -120,7 +120,8 @@ app.UseStaticFiles(new StaticFileOptions
 
 app.MapControllers();
 
-/*var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+//PORT FOR HEROKU DEPLOYMENT
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 app.Run($"http://*:{port}");
-*/
+
 app.Run();
